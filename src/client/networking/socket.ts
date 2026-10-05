@@ -18,7 +18,8 @@ export function resolveServerUrl(): string | undefined {
 export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export const socket: GameSocket = io(resolveServerUrl() ?? window.location.origin, {
-  transports: ['websocket', 'polling'],
+  // Default order: HTTP long-polling first, then upgrade to WebSocket when the network allows it.
+  // (WebSocket-only fails outright on proxies/firewalls that block upgrades.)
   reconnectionDelayMax: 3000,
   timeout: 6000,
 });
