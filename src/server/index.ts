@@ -19,8 +19,8 @@ const http = createServer((req, res) => {
 
 const { io, rooms } = createSocketServer(http);
 
-http.listen(config.port, () => {
-  console.log(`🎱 Marble Race server listening on :${config.port}`);
+http.listen(config.port, config.host, () => {
+  console.log(`🎱 Marble Race server listening on ${config.host}:${config.port}`);
   if (config.serveClient && statics.enabled) console.log('   serving built client from ./dist');
 });
 

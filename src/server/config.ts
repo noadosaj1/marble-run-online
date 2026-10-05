@@ -10,6 +10,8 @@ const int = (name: string, fallback: number, min = 0, max = Number.MAX_SAFE_INTE
 /** Server settings, all overridable through environment variables (see .env.example). */
 export const config = {
   port: int('PORT', 3001, 1, 65535),
+  /** Bind address. 0.0.0.0 (IPv4, all interfaces) is what hosts like Render scan for. */
+  host: process.env.HOST?.trim() || '0.0.0.0',
   /** Comma separated origins, or "*" */
   clientOrigin: process.env.CLIENT_ORIGIN?.trim() || '*',
   serveClient: (process.env.SERVE_CLIENT ?? 'true') !== 'false',
