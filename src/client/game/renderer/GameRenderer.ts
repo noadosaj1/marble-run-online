@@ -96,7 +96,7 @@ export class GameRenderer {
   }
 
   private resize(): void {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const w = Math.max(1, this.canvas.clientWidth);
     const h = Math.max(1, this.canvas.clientHeight);
     if (this.canvas.width !== Math.round(w * dpr) || this.canvas.height !== Math.round(h * dpr)) {

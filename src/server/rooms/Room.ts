@@ -53,6 +53,7 @@ export class Room {
   selectedTrack: TrackId = DEFAULT_TRACK;
   raceId = 0;
   emptySince: number | null = null;
+  private lastLagLog = 0;
   private players = new Map<string, ServerPlayer>();
   private race: ActiveRace | null = null;
 
@@ -287,6 +288,12 @@ export class Room {
     while (sim.tick < target && steps++ < MAX_CATCHUP_STEPS && !sim.over) {
       sim.step();
       if (sim.tick % SNAPSHOT_EVERY_TICKS === 0) this.emitSnapshot();
+    }
+    // Diagnostics: how far behind real time is the simulation? (CPU-starved hosts show up here.)
+    const lag = now - race.anchor - sim.tick * dt;
+    if (lag > 100 && now - this.lastLagLog > 5000) {
+      this.lastLagLog = now;
+      console.warn(`[room ${this.code}] simulation is ${Math.round(lag)}ms behind real time`);
     }
     if (sim.over) this.endRace(race, now);
   }

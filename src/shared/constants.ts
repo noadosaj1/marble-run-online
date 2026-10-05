@@ -30,7 +30,7 @@ export const MARBLE_COLORS: readonly string[] = [
 ];
 
 // ---- Networking ----
-export const SNAPSHOT_EVERY_TICKS = 2; // 60 Hz sim -> 30 Hz snapshots
+export const SNAPSHOT_EVERY_TICKS = 1; // 60 Hz sim -> 60 Hz snapshots (binary, so cheap)
 export const COUNTDOWN_SNAPSHOT_MS = 300; // keepalive snapshots while marbles are frozen
 export const RESULTS_DELAY_MS = 3500; // FINISHED -> RESULTS pause so the last finish is seen
 
@@ -42,19 +42,19 @@ export const STUCK_MIN_MOVE = 7; // px a marble must travel per check window
 // ---- Physics (Matter.js units: px, ms; one fixed step = 1/60 s) ----
 export const PHYSICS = {
   tickMs: 1000 / 60,
-  /** Matter force scale; ~0.30 px/step² acceleration. */
-  gravity: 0.0011,
+  /** Matter force scale; ~0.47 px/step² acceleration. */
+  gravity: 0.0017,
   positionIterations: 8,
   velocityIterations: 6,
   /** Hard clamp (px / step) so marbles can never tunnel through thin walls. */
-  maxSpeed: 19,
+  maxSpeed: 21,
   marble: {
     radius: 11,
     density: 0.002,
     friction: 0, // Matter friction makes marbles stick on gentle slopes; rolling is faked client-side
     frictionStatic: 0,
     restitution: 0.42,
-    frictionAir: 0.024,
+    frictionAir: 0.02,
   },
   wall: { friction: 0, restitution: 0.35 },
   peg: { friction: 0, restitution: 0.5 },

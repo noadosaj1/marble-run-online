@@ -1,5 +1,5 @@
 import { getState, pushToast, setState, uid } from '../state/store';
-import type { Ack, ClientToServerEvents, JoinData, ServerToClientEvents } from '../../shared/types';
+import type { Ack, ClientToServerEvents, JoinData, ServerToClientEvents, Snapshot } from '../../shared/types';
 import { RacePhase } from '../../shared/types';
 import { raceFeed } from '../game/raceFeed';
 import { sound } from '../game/audio/sound';
@@ -89,12 +89,31 @@ async function tryResume(): Promise<void> {
   }
 }
 
+/** The marble array travels as a binary attachment; normalise whatever the transport hands us. */
+function decodeSnapshot(raw: Snapshot): Snapshot {
+  const m: unknown = raw.m;
+  if (m instanceof Float32Array) return raw;
+  let buf: ArrayBuffer | null = null;
+  if (m instanceof ArrayBuffer) buf = m;
+  else if (ArrayBuffer.isView(m)) buf = m.buffer.slice(m.byteOffset, m.byteOffset + m.byteLength) as ArrayBuffer;
+  return { ...raw, m: new Float32Array(buf ?? new ArrayBuffer(0)) };
+}
+
+/** WebSocket streams smoothly; HTTP long-polling delivers in bursts, so give it a bigger cushion. */
+function updateTransport(): void {
+  const name = socket.io.engine?.transport?.name ?? '';
+  raceFeed.setDelay(name === 'websocket' ? 90 : 240);
+  setState({ transport: name });
+}
+
 export function initNetwork(): void {
   if (wired) return;
   wired = true;
 
   socket.on('connect', () => {
     setState({ conn: 'connected', everConnected: true });
+    updateTransport();
+    socket.io.engine.on('upgrade', updateTransport);
     void syncClock();
     void tryResume();
   });
@@ -113,7 +132,7 @@ export function initNetwork(): void {
     setState({ room });
   });
   socket.on('room:notice', (n) => pushToast(n.text, n.kind));
-  socket.on('race:snapshot', (s) => raceFeed.push(s));
+  socket.on('race:snapshot', (s) => raceFeed.push(decodeSnapshot(s)));
   socket.on('race:finish', (f) => {
     sound.play('finish');
     const id = uid();

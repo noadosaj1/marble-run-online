@@ -188,6 +188,7 @@ input::placeholder { color: #b9b0d6; font-weight: 500; }
 .race-info { display: flex; flex-direction: column; gap: 2px; background: rgba(12, 10, 32, 0.6); padding: 8px 14px; border-radius: 14px; font-size: 0.85rem; backdrop-filter: blur(4px); }
 .race-info strong { font-size: 1.05rem; }
 .race-info span { color: #cbbcff; }
+.race-info .net { font-size: 0.72rem; opacity: 0.75; }
 .race-controls { display: flex; gap: 8px; }
 .race-hint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(12, 10, 32, 0.55); padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; white-space: nowrap; animation: hint 7s forwards; pointer-events: none; }
 @keyframes hint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }

@@ -7,7 +7,8 @@ import type { DynamicObstacle, Obstacle } from '../../shared/obstacles';
 import { getTrack, startSlots } from '../../shared/tracks';
 import type { TrackDef, TrackId } from '../../shared/tracks';
 import { EV_BUMPER, EV_FINISH, EV_IMPACT, EV_MARBLE } from '../../shared/types';
-import type { MarbleTuple, SimEvent, Snapshot } from '../../shared/types';
+import { MARBLE_STRIDE } from '../../shared/types';
+import type { SimEvent, Snapshot } from '../../shared/types';
 import { createRng, shuffle } from './rng';
 
 const { Engine, Bodies, Body, Composite, Events, Vector } = Matter;
@@ -392,13 +393,16 @@ export class RaceSimulation {
   // ---- output -------------------------------------------------------------
 
   snapshot(): Snapshot {
-    const r1 = (n: number) => Math.round(n * 10) / 10;
-    const r2 = (n: number) => Math.round(n * 100) / 100;
-    const m: MarbleTuple[] = this.marbles.map((s) => [
-      r1(s.body.position.x), r1(s.body.position.y),
-      r2(s.body.velocity.x), r2(s.body.velocity.y),
-      r2(s.body.angle), s.finishPosition,
-    ]);
+    const m = new Float32Array(this.marbles.length * MARBLE_STRIDE);
+    this.marbles.forEach((s, i) => {
+      const o = i * MARBLE_STRIDE;
+      m[o] = s.body.position.x;
+      m[o + 1] = s.body.position.y;
+      m[o + 2] = s.body.velocity.x;
+      m[o + 3] = s.body.velocity.y;
+      m[o + 4] = s.body.angle;
+      m[o + 5] = s.finishPosition;
+    });
     const snap: Snapshot = { raceId: 0, seq: this.seq++, t: Math.round(this.timeMs), m };
     if (this.events.length) {
       snap.ev = this.events;

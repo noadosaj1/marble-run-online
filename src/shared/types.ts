@@ -66,10 +66,10 @@ export interface RoomState {
 }
 
 /**
- * Compact per-marble tuple: [x, y, vx, vy, angle, finishPosition(0 = racing)].
- * Index == Racer.index.
+ * Marble state is a flat Float32Array (sent as a binary attachment, ~4x smaller than JSON):
+ * per marble [x, y, vx, vy, angle, finishPosition(0 = racing)], in Racer.index order.
  */
-export type MarbleTuple = [number, number, number, number, number, number];
+export const MARBLE_STRIDE = 6;
 
 /** Transient effect events: [kind, x, y, power]. */
 export type SimEvent = [kind: number, x: number, y: number, power: number];
@@ -83,7 +83,7 @@ export interface Snapshot {
   seq: number;
   /** Simulation time in ms since GO (tick * 1000/60). */
   t: number;
-  m: MarbleTuple[];
+  m: Float32Array;
   ev?: SimEvent[];
 }
 

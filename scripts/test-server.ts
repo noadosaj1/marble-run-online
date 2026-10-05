@@ -111,10 +111,10 @@ check('both clients see same goAt', p2.state?.race?.goAt === goAt);
 await waitFor(() => host.state?.phase === RacePhase.RACING, 4000, 'RACING');
 check('RACING after countdown', host.state?.phase === RacePhase.RACING, `${Date.now() - t0}ms`);
 await sleep(1000);
-check('snapshots streaming (~30Hz)', host.snaps.length > 20, `${host.snaps.length} snaps`);
+check('snapshots streaming (~60Hz)', host.snaps.length > 40, `${host.snaps.length} snaps`);
 check('both receive identical snapshots', p2.snaps.length > 20 && Math.abs(p2.snaps.length - host.snaps.length) < 6);
 const last = host.snaps[host.snaps.length - 1];
-check('snapshot has 2 marbles w/ 6 fields', last.m.length === 2 && last.m[0].length === 6);
+check('snapshot has 2 marbles x 6 floats (binary)', (last.m as unknown as { byteLength: number }).byteLength === 2 * 6 * 4, String((last.m as unknown as { byteLength: number }).byteLength));
 
 // player 2 drops mid-race: marble stays, marked disconnected
 p2.disconnect();

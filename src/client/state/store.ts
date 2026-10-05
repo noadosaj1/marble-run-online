@@ -18,6 +18,8 @@ export interface FinishEntry {
 
 export interface GameState {
   conn: ConnStatus;
+  /** Active socket.io transport ('websocket' | 'polling'), for diagnostics and smoothing. */
+  transport: string;
   /** True once we have connected at least once (distinguishes first load from a drop). */
   everConnected: boolean;
   room: RoomState | null;
@@ -33,6 +35,7 @@ export interface GameState {
 
 let state: GameState = {
   conn: 'connecting',
+  transport: '',
   everConnected: false,
   room: null,
   me: null,

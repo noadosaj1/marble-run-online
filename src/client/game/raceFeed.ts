@@ -1,8 +1,9 @@
 import { MARBLE_COLORS } from '../../shared/constants';
-import type { MarbleTuple, SimEvent, Snapshot } from '../../shared/types';
+import { MARBLE_STRIDE } from '../../shared/types';
+import type { SimEvent, Snapshot } from '../../shared/types';
 
-/** Render this far behind the newest snapshot so we can interpolate smoothly. */
-export const INTERP_DELAY_MS = 110;
+/** Render this far behind the newest snapshot so we can interpolate smoothly. Adjustable per connection. */
+let interpDelay = 90;
 const MAX_EXTRAPOLATE_MS = 120;
 const STEP_MS = 1000 / 60;
 
@@ -23,6 +24,11 @@ class RaceFeed {
   private pendingEvents: SimEvent[] = [];
   version = 0;
 
+  /** Slower transports (HTTP polling) deliver in bursts and need more cushion. */
+  setDelay(ms: number): void {
+    interpDelay = ms;
+  }
+
   reset(raceId: number): void {
     this.snaps = [];
     this.raceId = raceId;
@@ -40,12 +46,12 @@ class RaceFeed {
     const last = this.snaps[this.snaps.length - 1];
     if (last && s.seq <= last.seq) return; // stale / duplicate
     this.snaps.push(s);
-    if (this.snaps.length > 40) this.snaps.shift();
+    if (this.snaps.length > 90) this.snaps.shift();
     if (s.ev) this.pendingEvents.push(...s.ev);
 
     // Steer the playback clock gently towards (newest - delay); jump if far off.
     if (s.t > 0) {
-      const target = s.t - INTERP_DELAY_MS;
+      const target = s.t - interpDelay;
       if (!this.synced || Math.abs(target - this.renderT) > 400) {
         this.renderT = target;
         this.synced = true;
@@ -98,18 +104,20 @@ class RaceFeed {
       f = (t - a.t) / Math.max(1, b.t - a.t);
     }
     const extra = t > last.t ? Math.min(t - last.t, MAX_EXTRAPOLATE_MS) / STEP_MS : 0;
-    for (let i = 0; i < last.m.length; i++) {
-      const ma: MarbleTuple = a.m[i] ?? last.m[i];
-      const mb: MarbleTuple = b.m[i] ?? last.m[i];
-      const o = out[i] ?? (out[i] = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, finishPos: 0 });
-      o.x = ma[0] + (mb[0] - ma[0]) * f + (extra ? mb[2] * extra : 0);
-      o.y = ma[1] + (mb[1] - ma[1]) * f + (extra ? mb[3] * extra : 0);
-      o.vx = mb[2];
-      o.vy = mb[3];
-      o.angle = ma[4] + (mb[4] - ma[4]) * f;
-      o.finishPos = mb[5];
+    const count = last.m.length / MARBLE_STRIDE;
+    for (let i = 0; i < count; i++) {
+      const o = i * MARBLE_STRIDE;
+      const ma = a.m.length > o ? a.m : last.m;
+      const mb = b.m.length > o ? b.m : last.m;
+      const r = out[i] ?? (out[i] = { x: 0, y: 0, vx: 0, vy: 0, angle: 0, finishPos: 0 });
+      r.x = ma[o] + (mb[o] - ma[o]) * f + (extra ? mb[o + 2] * extra : 0);
+      r.y = ma[o + 1] + (mb[o + 1] - ma[o + 1]) * f + (extra ? mb[o + 3] * extra : 0);
+      r.vx = mb[o + 2];
+      r.vy = mb[o + 3];
+      r.angle = ma[o + 4] + (mb[o + 4] - ma[o + 4]) * f;
+      r.finishPos = mb[o + 5];
     }
-    out.length = last.m.length;
+    out.length = count;
     return out;
   }
 }

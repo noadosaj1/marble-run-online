@@ -6,6 +6,9 @@ let bestRtt = Infinity;
 
 export const serverNow = (): number => Date.now() + offset;
 
+/** Best measured round-trip time to the server in ms (Infinity before the first sample). */
+export const getRtt = (): number => bestRtt;
+
 function sample(): Promise<void> {
   return new Promise((resolve) => {
     const t0 = Date.now();
